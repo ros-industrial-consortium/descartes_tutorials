@@ -8,46 +8,135 @@
 // Includes the descartes robot model we will be using
 #include <descartes_moveit/moveit_state_adapter.h>
 // Includes the descartes trajectory type we will be using
+#include <descartes_trajectory/axial_symmetric_pt.h>
 #include <descartes_trajectory/cart_trajectory_pt.h>
 // Includes the planner we will be using
 #include <descartes_planner/dense_planner.h>
 
-#include <eigen3/Eigen/Dense>
-
 typedef std::vector<descartes_core::TrajectoryPtPtr> TrajectoryVec;
 typedef TrajectoryVec::const_iterator TrajectoryIter;
+
+/**
+ * Generates an completely defined (zero-tolerance) cartesian point from a pose
+ */
+descartes_core::TrajectoryPtPtr makeCartesianPoint(const Eigen::Affine3d& pose);
+/**
+ * Generates a cartesian point with free rotation about the Z axis of the EFF frame
+ */
+descartes_core::TrajectoryPtPtr makeTolerancedCartesianPoint(const Eigen::Affine3d& pose);
+
+/**
+ * Translates a descartes trajectory to a ROS joint trajectory
+ */
+trajectory_msgs::JointTrajectory
+toROSJointTrajectory(const TrajectoryVec& trajectory, const descartes_core::RobotModel& model,
+                     const std::vector<std::string>& joint_names, double time_delay);
+
+/**
+ * Sends a ROS trajectory to the robot controller
+ */
+bool executeTrajectory(const trajectory_msgs::JointTrajectory& trajectory);
+
+int main(int argc, char** argv)
+{
+  // Initialize ROS
+  ros::init(argc, argv, "descartes_tutorial");
+  ros::NodeHandle nh;
+
+  // Required for communication with moveit components
+  ros::AsyncSpinner spinner (1);
+  spinner.start();
+
+  // 1. Define sequence of points
+  TrajectoryVec points;
+  for (unsigned int i = 0; i < 10; ++i)
+  {
+    Eigen::Affine3d pose;
+    pose = Eigen::Translation3d(0.0, 0.0, 1.0 + 0.05 * i);
+    descartes_core::TrajectoryPtPtr pt = makeTolerancedCartesianPoint(pose);
+    points.push_back(pt);
+  }
+
+  for (unsigned int i = 0; i < 5; ++i)
+  {
+    Eigen::Affine3d pose;
+    pose = Eigen::Translation3d(0.0, 0.04 * i, 1.3);
+    descartes_core::TrajectoryPtPtr pt = makeTolerancedCartesianPoint(pose);
+    points.push_back(pt);
+  }
+
+  // 2. Create a robot model and initialize it
+  descartes_core::RobotModelPtr model (new descartes_moveit::MoveitStateAdapter);
+
+  // Name of description on parameter server. Typically just "robot_description".
+  const std::string robot_description = "robot_description";
+
+  // name of the kinematic group you defined when running MoveitSetupAssistant
+  const std::string group_name = "manipulator";
+
+  // Name of frame in which you are expressing poses. Typically "world_frame" or "base_link".
+  const std::string world_frame = "base_link";
+
+  // tool center point frame (name of link associated with tool)
+  const std::string tcp_frame = "tool0";
+
+  if (!model->initialize(robot_description, group_name, world_frame, tcp_frame))
+  {
+    ROS_INFO("Could not initialize robot model");
+    return -1;
+  }
+
+  // 3. Create a planner and initialize it with our robot model
+  descartes_planner::DensePlanner planner;
+  planner.initialize(model);
+
+  // 4. Feed the trajectory to the planner
+  if (!planner.planPath(points))
+  {
+    ROS_ERROR("Could not solve for a valid path");
+    return -2;
+  }
+
+  TrajectoryVec result;
+  if (!planner.getPath(result))
+  {
+    ROS_ERROR("Could not retrieve path");
+    return -3;
+  }
+
+  // 5. Translate the result into a type that ROS understands
+  // Get Joint Names
+  std::vector<std::string> names;
+  nh.getParam("controller_joint_names", names);
+  // Generate a ROS joint trajectory with the result path, robot model, given joint names,
+  // a certain time delta between each trajectory point
+  trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 1.0);
+
+  // 6. Send the ROS trajectory to the robot for execution
+  if (!executeTrajectory(joint_solution))
+  {
+    ROS_ERROR("Could not execute trajectory!");
+    return -4;
+  }
+
+  // Wait till user kills the process (Control-C)
+  ROS_INFO("Done!");
+  return 0;
+}
 
 descartes_core::TrajectoryPtPtr makeCartesianPoint(const Eigen::Affine3d& pose)
 {
   using namespace descartes_core;
   using namespace descartes_trajectory;
 
-  return TrajectoryPtPtr( new CartTrajectoryPt(
-                            TolerancedFrame(pose)) );
+  return TrajectoryPtPtr( new CartTrajectoryPt( TolerancedFrame(pose)) );
 }
 
 descartes_core::TrajectoryPtPtr makeTolerancedCartesianPoint(const Eigen::Affine3d& pose)
 {
   using namespace descartes_core;
   using namespace descartes_trajectory;
-
-  // Extract rotation information
-  Eigen::Vector3d rpy = pose.rotation().eulerAngles(0, 1, 2);
-  double rx = rpy(0);
-  double ry = rpy(1);
-  double rz = rpy(2);
-  // Extract translation information
-  Eigen::Vector3d trans = pose.translation();
-  double x = trans(0);
-  double y = trans(1);
-  double z = trans(2);
-
-  return TrajectoryPtPtr( new CartTrajectoryPt(
-                            TolerancedFrame(pose,
-                                            ToleranceBase::zeroTolerance<PositionTolerance>(x, y, z),
-                                            ToleranceBase::createSymmetric<OrientationTolerance>(rx, ry, 0.0, 0.0, 0.0, 2*M_PI)),
-                            0.0, // pos search increment
-                            0.4)); // orientation search increment
+  return TrajectoryPtPtr( new AxialSymmetricPt(pose, M_PI/2.0-0.0001, AxialSymmetricPt::Z_AXIS) );
 }
 
 trajectory_msgs::JointTrajectory
@@ -114,84 +203,4 @@ bool executeTrajectory(const trajectory_msgs::JointTrajectory& trajectory)
     ROS_WARN("Action server could not execute trajectory");
     return false;
   }
-}
-
-int main(int argc, char** argv)
-{
-  // Initialize ROS
-  ros::init(argc, argv, "descartes_tutorial");
-  ros::NodeHandle nh;
-
-  // Required for communication with moveit components
-  ros::AsyncSpinner spinner (1);
-  spinner.start();
-
-  // 1. Define sequence of points
-  TrajectoryVec points;
-  for (unsigned int i = 0; i < 10; ++i)
-  {
-    Eigen::Affine3d pose;
-    pose = Eigen::Translation3d(0.0, 0.0, 1.0 + 0.05 * i);
-    descartes_core::TrajectoryPtPtr pt = makeTolerancedCartesianPoint(pose);
-    points.push_back(pt);
-  }
-
-  // 2. Create a robot model and initialize it
-  descartes_core::RobotModelPtr model (new descartes_moveit::MoveitStateAdapter);
-
-  // Name of description on parameter server. Typically just "robot_description".
-  const std::string robot_description = "robot_description";
-
-  // name of the kinematic group you defined when running MoveitSetupAssistant
-  const std::string group_name = "manipulator";
-
-  // Name of frame in which you are expressing poses. Typically "world_frame" or "base_link".
-  const std::string world_frame = "base_link";
-
-  // tool center point frame (name of link associated with tool)
-  const std::string tcp_frame = "tool0";
-
-  ROS_INFO("INIT");
-  if (!model->initialize(robot_description, group_name, world_frame, tcp_frame))
-  {
-    ROS_INFO("Could not initialize robot model");
-    return -4;
-  }
-
-  // 3. Create a planner and initialize it with our robot model
-  descartes_planner::DensePlanner planner;
-  planner.initialize(model);
-
-  // 4. Feed the trajectory to the planner
-  if (!planner.planPath(points))
-  {
-    ROS_ERROR("Could not solve for a valid path");
-    return -1;
-  }
-
-  TrajectoryVec result;
-  if (!planner.getPath(result))
-  {
-    ROS_ERROR("Could not retrieve path");
-    return -2;
-  }
-
-  // 5. Translate the result into a type that ROS understands
-  // Get Joint Names
-  std::vector<std::string> names;
-  nh.getParam("controller_joint_names", names);
-
-  trajectory_msgs::JointTrajectory joint_solution =
-      toROSJointTrajectory(result, *model, names, 1.0);
-
-  // 6. Send the ROS trajectory to the robot for execution
-  if (!executeTrajectory(joint_solution))
-  {
-    ROS_ERROR("Could not execute trajectory!");
-    return -3;
-  }
-
-  // Wait till user kills the process (Control-C)
-  ROS_INFO("Done!");
-  return 0;
 }
