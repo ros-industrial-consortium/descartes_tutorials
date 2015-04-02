@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  
+  <arg name="sim" default="true" />
+  
+  <include file="$(find motoman_sia20d_moveit_config)/launch/moveit_planning_execution.launch">
+    <arg name="sim" value="$(arg sim)"/>
+  </include>
+
+</launch>
