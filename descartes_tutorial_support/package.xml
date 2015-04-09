@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>descartes_tutorials</name>
+  <name>descartes_tutorial_support</name>
   <version>0.0.0</version>
-  <description>The descartes_tutorials package</description>
+  <description>The descartes_tutorial_support package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/descartes_tutorials</url> -->
+  <!-- <url type="website">http://wiki.ros.org/descartes_tutorial_support</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
@@ -40,25 +40,10 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  
-  <build_depend>descartes_core</build_depend>
-  <build_depend>descartes_moveit</build_depend>
-  <build_depend>descartes_planner</build_depend>
-  <build_depend>descartes_trajectory</build_depend>
-  <build_depend>trajectory_msgs</build_depend>
 
-  <run_depend>descartes_core</run_depend>
-  <run_depend>descartes_moveit</run_depend>
-  <run_depend>descartes_planner</run_depend>
-  <run_depend>descartes_trajectory</run_depend>
-  <run_depend>trajectory_msgs</run_depend>
-  
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- You can specify that this package is a metapackage here: -->
-    <!-- <metapackage/> -->
-
     <!-- Other tools can request additional information be placed here -->
 
   </export>

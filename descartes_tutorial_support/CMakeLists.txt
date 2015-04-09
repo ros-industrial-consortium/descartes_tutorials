@@ -1,16 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(descartes_tutorials)
+project(descartes_tutorial_support)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  descartes_core
-  descartes_moveit
-  descartes_trajectory
-  descartes_planner
-  trajectory_msgs
-)
+find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -83,8 +77,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES descartes_tutorials
-#  CATKIN_DEPENDS descartes
+#  LIBRARIES descartes_tutorial_support
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -95,26 +89,23 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 ## Declare a cpp library
-# add_library(descartes_tutorials
-  # src/${PROJECT_NAME}/descartes_tutorials.cpp
+# add_library(descartes_tutorial_support
+#   src/${PROJECT_NAME}/descartes_tutorial_support.cpp
 # )
 
 ## Declare a cpp executable
- add_executable(tutorial1 src/tutorial1.cpp)
+# add_executable(descartes_tutorial_support_node src/descartes_tutorial_support_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(descartes_tutorials_node descartes_tutorials_generate_messages_cpp)
+# add_dependencies(descartes_tutorial_support_node descartes_tutorial_support_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(tutorial1
-   ${catkin_LIBRARIES}
- )
+# target_link_libraries(descartes_tutorial_support_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -131,7 +122,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS descartes_tutorials descartes_tutorials_node
+# install(TARGETS descartes_tutorial_support descartes_tutorial_support_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -156,7 +147,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_descartes_tutorials.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_descartes_tutorial_support.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
