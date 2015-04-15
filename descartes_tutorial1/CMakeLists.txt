@@ -19,17 +19,22 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
- add_executable(tutorial1 src/tutorial1.cpp)
+ add_executable(${PROJECT_NAME}_tutorial1 src/tutorial1.cpp)
 
- target_link_libraries(tutorial1
+ target_link_libraries(${PROJECT_NAME}_tutorial1
    ${catkin_LIBRARIES}
  )
+
+set_target_properties(${PROJECT_NAME}_tutorial1
+  PROPERTIES OUTPUT_NAME tutorial1
+  PREFIX "")
+
 
 #############
 ## Install ##
 #############
 
-install(TARGETS tutorial1
+install(TARGETS ${PROJECT_NAME}_tutorial1
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
