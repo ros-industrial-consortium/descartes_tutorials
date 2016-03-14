@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(descartes_tutorial1)
+project(descartes_tutorials)
 
 find_package(catkin REQUIRED COMPONENTS
   descartes_core
