@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(descartes_tutorials)
 
+add_definitions(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   descartes_core
   descartes_moveit
