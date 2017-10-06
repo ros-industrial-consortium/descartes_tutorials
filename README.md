@@ -20,7 +20,7 @@ git clone https://github.com/ros-industrial/motoman.git
 Install dependencies:
 
 ```
-https://github.com/ros-industrial-consortium/descartes_tutorials.git
+rosdep install --from-paths src --ignore-src --rosdistro=kinetic -y
 ```
 
 Then build.
