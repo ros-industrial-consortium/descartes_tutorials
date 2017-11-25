@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!--First we load the moveit-ecosystem around our robot-->
+  <!--This is a canned file that includes ONLY the robot. For your planning problem, you'll want to make
+  your own URDF and an associated moveit config-->
+
+  <!--NOTE that this moveit-config has an IKFast plugin specified as the active kinematics plugin for the
+  "manipulator" move group that we are planning for. This is important if you want to use the
+  IKFastMoveitStateAdapter robot model in Descartes.-->
+  <include file="$(find abb_irb2400_moveit_config)/launch/moveit_planning_execution.launch"/>
+
+  <!-- Launch RVIZ with a pre-configured set of message displays -->
+  <node name="$(anon rviz)" pkg="rviz" type="rviz" args="-d $(find descartes_tutorials)/config/descartes.rviz"/>
+
+</launch>

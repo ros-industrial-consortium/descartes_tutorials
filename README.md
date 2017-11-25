@@ -14,7 +14,7 @@ Clone the following repos:
 
 ```
 git clone https://github.com/ros-industrial-consortium/descartes_tutorials.git
-git clone https://github.com/ros-industrial/motoman.git
+git clone https://github.com/ros-industrial/abb.git
 ```
 
 Install dependencies:
