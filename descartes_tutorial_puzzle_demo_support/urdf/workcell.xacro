@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<robot name="myworkcell" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find abb_irb2400_support)/urdf/irb2400_12_155_macro.xacro" />
+
+  <!-- This contains the macro "ses_part_macro" that places the clip wrt the tool tip -->
+  <include filename="$(find descartes_tutorial_puzzle_demo_support)/urdf/puzzle_mount.xacro" />
+  <include filename="$(find descartes_tutorial_puzzle_demo_support)/urdf/grinder.xacro" />
+
+  <link name="world"/>
+
+  <link name="table">
+    <visual>
+      <geometry>
+        <box size="1.0 1.0 0.05"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="1.0 1.0 0.05"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <xacro:abb_irb2400_12_155 prefix=""/>
+
+  <joint name="world_to_table" type="fixed">
+    <parent link="world"/>
+    <child link="table"/>
+    <origin xyz="0 0 0.5" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="world_to_grinder" type="fixed">
+    <parent link="world"/>
+    <child link="grinder_frame"/>
+    <origin xyz="1.0 -0.4 1.0" rpy="0 3.14159 0"/>
+  </joint>
+
+  <joint name="table_to_robot" type="fixed">
+    <parent link="table"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="robot_tool" type="fixed">
+    <parent link="tool0"/>
+    <child link="ee_mount"/>
+    <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+  </joint>
+
+</robot>

@@ -4,12 +4,15 @@ project(descartes_tutorials)
 add_definitions(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
+  roslib
   descartes_core
   descartes_moveit
   descartes_trajectory
   descartes_planner
   descartes_utilities
   trajectory_msgs
+  tf
+  tf_conversions
 )
 
 catkin_package()
@@ -22,15 +25,28 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
- add_executable(${PROJECT_NAME}_tutorial1 src/tutorial1.cpp)
+# Tutorial 1
+add_executable(${PROJECT_NAME}_tutorial1 src/tutorial1.cpp)
 
- target_link_libraries(${PROJECT_NAME}_tutorial1
-   ${catkin_LIBRARIES}
- )
+target_link_libraries(${PROJECT_NAME}_tutorial1
+ ${catkin_LIBRARIES}
+)
 
 set_target_properties(${PROJECT_NAME}_tutorial1
   PROPERTIES OUTPUT_NAME tutorial1
   PREFIX "")
+
+# Tutorial 2 - Puzzle Demo
+add_executable(${PROJECT_NAME}_tutorial2 src/tutorial2.cpp)
+
+target_link_libraries(${PROJECT_NAME}_tutorial2
+ ${catkin_LIBRARIES}
+)
+
+set_target_properties(${PROJECT_NAME}_tutorial2
+  PROPERTIES OUTPUT_NAME tutorial2
+  PREFIX "")
+
 
 
 #############
