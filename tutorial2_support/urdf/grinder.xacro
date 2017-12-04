@@ -4,13 +4,13 @@
       <visual>
        <origin xyz="0 0 0" rpy="0 3.14159 0" />
         <geometry>
-          <mesh filename="package://descartes_tutorial_puzzle_demo_support/meshes/grinder_visual.dae" />
+          <mesh filename="package://tutorial2_support/meshes/grinder_visual.dae" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 3.14159 0" />
         <geometry>
-          <mesh filename="package://descartes_tutorial_puzzle_demo_support/meshes/grinder_collision.dae" />
+          <mesh filename="package://tutorial2_support/meshes/grinder_collision.dae" />
         </geometry>
       </collision>
     </link>

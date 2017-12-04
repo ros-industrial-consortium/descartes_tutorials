@@ -7,12 +7,12 @@
   <link name="ee_base" >
     <visual>
       <geometry>
-        <mesh filename="package://descartes_tutorial_puzzle_demo_support/meshes/puzzle_mount.stl" />
+        <mesh filename="package://tutorial2_support/meshes/puzzle_mount.stl" />
       </geometry>>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://descartes_tutorial_puzzle_demo_support/meshes/puzzle_mount.stl" />
+        <mesh filename="package://tutorial2_support/meshes/puzzle_mount.stl" />
       </geometry>
     </collision>
   </link>
@@ -34,12 +34,12 @@
   <link name="part" >
     <visual>
       <geometry>
-        <mesh filename="package://descartes_tutorial_puzzle_demo_support/meshes/puzzle_bent.dae" />
+        <mesh filename="package://tutorial2_support/meshes/puzzle_bent.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://descartes_tutorial_puzzle_demo_support/meshes/puzzle_bent.dae" />
+        <mesh filename="package://tutorial2_support/meshes/puzzle_bent.dae" />
       </geometry>
     </collision>
   </link>

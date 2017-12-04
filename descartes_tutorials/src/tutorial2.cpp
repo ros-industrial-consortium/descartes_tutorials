@@ -185,7 +185,7 @@ EigenSTL::vector_Affine3d makePuzzleToolPoses()
   EigenSTL::vector_Affine3d path;
   std::ifstream indata;
 
-  std::string filename = ros::package::getPath("descartes_tutorial_puzzle_demo_support") + "/config/puzzle_bent.csv";
+  std::string filename = ros::package::getPath("tutorial2_support") + "/config/puzzle_bent.csv";
 
   indata.open(filename);
 
