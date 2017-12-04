@@ -24,3 +24,23 @@ rosdep install --from-paths src --ignore-src --rosdistro=kinetic -y
 ```
 
 Then build.
+
+## Tutorial 1
+Very basic tutorial. Moves a robot along a straight line by specifying where to
+put the tool.
+```
+roslaunch descartes_tutorials setup.launch
+```
+```
+rosrun descartes_tutorials tutorial1
+```
+
+## Tutorial 2
+A more complex tutorial. The robot is holding a puzzle piece and moves the perimeter around a fixed grinder in the environment.
+```
+roslaunch tutorial2_moveit_config planning_execution.launch
+```
+
+```
+rosrun descartes_tutorials tutorial2
+```
