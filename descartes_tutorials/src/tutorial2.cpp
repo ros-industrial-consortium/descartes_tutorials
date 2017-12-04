@@ -18,11 +18,13 @@
 // Includes the utility function for converting to trajectory_msgs::JointTrajectory's
 #include <descartes_utilities/ros_conversions.h>
 
-#include <ros/package.h>
-#include <fstream>
+// For reading the position of the grinder from TF
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 
+// For loading the pose file from a local package
+#include <ros/package.h>
+#include <fstream>
 /**
  * Makes a dummy trajectory for the robot to follow.
  */
@@ -39,42 +41,31 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "descartes_tutorial");
   ros::NodeHandle nh;
 
-  // Since we're not calling ros::spin() and doing the planning in a callback, but rather just handling this
-  // inline, we need to create an async spinner if our publishers are to work. Note that many MoveIt components
-  // will also not work without an active spinner and Descartes uses moveit for its "groups" and "scene" descriptions
+  // I won't be repeating too many comments, so please take a look back at the first tutorial for an explanation of
+  // the basics.
   ros::AsyncSpinner spinner (1);
   spinner.start();
 
-  // 1. First thing first, let's create a kinematic model of the robot. In Descartes, this is used to do things
-  // like forward kinematics (joints -> pose), inverse kinematics (pose -> many joints), and collision checking.
-
-  // All of the existing planners (as of Nov 2017) have been designed with the idea that you have "closed form"
-  // kinematics. This means that the default solvers in MoveIt (KDL) will NOT WORK WELL. I encourage you to produce
-  // an ikfast model for your robot (see MoveIt tutorial) or use the OPW kinematics package if you have a spherical
-  // wrist industrial robot. See the readme for references.
-
   // This package assumes that the move group you are using is pointing to an IKFast kinematics plugin in its
   // kinematics.yaml file. By default, it assumes that the underlying kinematics are from 'base_link' to 'tool0'.
+  // We're using a group that does not begin or end at these links, but they do exist in the model.
   // If you have renamed these, please set the 'ikfast_base_frame' and 'ikfast_tool_frame' parameter (not in the
   // private namespace) to the base and tool frame used to generate the IKFast model.
   descartes_core::RobotModelPtr model (new descartes_moveit::IkFastMoveitStateAdapter());
 
-  // Name of description on parameter server. Typically just "robot_description". Used to initialize
-  // moveit model.
   const std::string robot_description = "robot_description";
 
-  // name of the kinematic group you defined when running MoveitSetupAssistant. For many industrial robots this will be
-  // "manipulator"
+  // We have made a special move group which goes from the base link of the robot to the reference frame of the mounted
+  // part that the robot is holding.
   const std::string group_name = "puzzle";
 
-  // Name of frame in which you are expressing poses. Typically "world_frame" or "base_link".
+  // Name of frame in which you are expressing poses.
   const std::string world_frame = "world";
 
-  // tool center point frame (name of link associated with tool). The robot's flange is typically "tool0" but yours
-  // could be anything. We typically have our tool's positive Z-axis point outward from the grinder, welder, etc.
+  // In this demo, "part" is a reference frame located on the part that the robot is holding. It's a frame that we can
+  // precisely locate w.r.t the robot, and in which we can export the poses representing the edge of the part.
   const std::string tcp_frame = "part";
 
-  // Before you can use a model, you must call initialize. This will load robot models and sanity check the model.
   if (!model->initialize(robot_description, group_name, world_frame, tcp_frame))
   {
     ROS_INFO("Could not initialize robot model");
@@ -83,30 +74,18 @@ int main(int argc, char** argv)
 
   model->setCheckCollisions(true); // Let's turn on collision checking.
 
-  // 2. The next thing to do is to generate a path for the robot to follow. The description of this path is one of the
-  // cool things about Descartes. The source of this path is where this library ties into your application: it could
-  // come from CAD or from surfaces that were "scanned".
-
-  // Make the path by calling a helper function. See makePath()'s definition for more discussion about paths.
+  // Here we load a path by reading a file of poses generated on the perimeter of the part being held by the robot.
+  // These were generated from the CAD model. This is the interesting bit of this tutorial.
   std::vector<descartes_core::TrajectoryPtPtr> points = makePath();
 
-  // 3. Now we create a planner that can fuse your kinematic world with the points you want to move the robot
-  // along. There are a couple of planners now. DensePlanner is the naive, brute force approach to solving the
-  // trajectory. SparsePlanner may be faster for some problems (especially very dense ones), but has recieved
-  // less overall testing and evaluation.
   descartes_planner::DensePlanner planner;
 
-  // Like the model, you also need to call initialize on the planner
   if (!planner.initialize(model))
   {
     ROS_ERROR("Failed to initialize planner");
     return -2;
   }
 
-  // 4. Now, for the planning itself. This typically happens in two steps. First, call planPath(). This function takes
-  // your input trajectory and expands it into a large kinematic "graph". Failures at this point indicate that the
-  // input path may not have solutions at a given point (because of reach/collision) or has two points with no way
-  // to connect them.
   auto start_tm = ros::WallTime::now();
   if (!planner.planPath(points))
   {
@@ -114,10 +93,6 @@ int main(int argc, char** argv)
     return -3;
   }
 
-  // After expanding the graph, we now call 'getPath()' which searches the graph for a minimum cost path and returns
-  // the result. Failures here (assuming planPath was good) indicate that your path has solutions at every waypoint
-  // but constraints prevent a solution through the whole path. Usually this means a singularity is hanging out in the
-  // middle of your path: the robot can solve all the points but not in the same arm configuration.
   auto search_start_tm = ros::WallTime::now();
   std::vector<descartes_core::TrajectoryPtPtr> result;
   if (!planner.getPath(result))
@@ -132,11 +107,7 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM("Graph search (s): " << (end_tm - search_start_tm).toSec());
   ROS_INFO_STREAM("Total time (s): " << (end_tm - start_tm).toSec());
 
-  // 5. Translate the result into something that you can execute. In ROS land, this means that we turn the result into
-  // a trajectory_msgs::JointTrajectory that's executed through a control_msgs::FollowJointTrajectoryAction. If you
-  // have your own execution interface, you can get joint values out of the results in the same way.
-
-  // get joint names - this could be from the robot model, or from the parameter server.
+  // Translate the result into something that you can execute.
   std::vector<std::string> names;
   nh.getParam("controller_joint_names", names);
 
@@ -165,28 +136,19 @@ int main(int argc, char** argv)
   return 0;
 }
 
-descartes_core::TrajectoryPtPtr makeCartesianPoint(const Eigen::Affine3d& pose, double dt)
+/**
+ * @brief Loads a specific file containing the perimeter of the puzzle part generated from CAD. The frames
+ * are exported in the "puzzle" frame, so we can coordinate the motion of the robot with this part.
+ */
+static EigenSTL::vector_Affine3d makePuzzleToolPoses()
 {
-  using namespace descartes_core;
-  using namespace descartes_trajectory;
+  EigenSTL::vector_Affine3d path; // results
+  std::ifstream indata; // input file
 
-  return TrajectoryPtPtr( new CartTrajectoryPt( TolerancedFrame(pose), TimingConstraint(dt)) );
-}
-
-descartes_core::TrajectoryPtPtr makeTolerancedCartesianPoint(const Eigen::Affine3d& pose, double dt)
-{
-  using namespace descartes_core;
-  using namespace descartes_trajectory;
-  return TrajectoryPtPtr( new AxialSymmetricPt(pose, 0.1, AxialSymmetricPt::Z_AXIS, TimingConstraint(dt)) );
-}
-
-EigenSTL::vector_Affine3d makePuzzleToolPoses()
-{
-  EigenSTL::vector_Affine3d path;
-  std::ifstream indata;
-
+  // You could load your parts from anywhere, but we are transporting them with the git repo
   std::string filename = ros::package::getPath("tutorial2_support") + "/config/puzzle_bent.csv";
 
+  // In a non-trivial app, you'll of course want to check that calls like 'open' succeeded
   indata.open(filename);
 
   std::string line;
@@ -199,7 +161,7 @@ EigenSTL::vector_Affine3d makePuzzleToolPoses()
 
       std::stringstream lineStream(line);
       std::string  cell;
-      Eigen::VectorXd xyzijk(6);
+      Eigen::Matrix<double, 6, 1> xyzijk;
       int i = -2;
       while (std::getline(lineStream, cell, ','))
       {
@@ -211,10 +173,12 @@ EigenSTL::vector_Affine3d makePuzzleToolPoses()
       }
 
       Eigen::Vector3d pos = xyzijk.head<3>();
-      pos = pos / 1000.0;
+      pos = pos / 1000.0; // Most things in ROS use meters as the unit of length. Our part was exported in mm.
       Eigen::Vector3d norm = xyzijk.tail<3>();
       norm.normalize();
 
+      // This code computes two extra directions to turn the normal direction into a full defined frame. Descartes
+      // will search around this frame for extra poses, so the exact values do not matter as long they are valid.
       Eigen::Vector3d temp_x = (-1 * pos).normalized();
       Eigen::Vector3d y_axis = (norm.cross(temp_x)).normalized();
       Eigen::Vector3d x_axis = (y_axis.cross(norm)).normalized();
@@ -239,26 +203,52 @@ makeDescartesTrajectory(const EigenSTL::vector_Affine3d& path)
 
   std::vector<descartes_core::TrajectoryPtPtr> descartes_path; // return value
 
-  // need to get the transform between grinder_frame and base_link;
-  tf::StampedTransform grinder_frame;
+  // This is where the magic happens. We have a tool path, but its in a coordinate frame that is local
+  // to the part. We'll use a special constructor of CartTrajectoryPt to tell Descartes about this soon,
+  // but first we need to figure out where the grinder is in our "world". You might have this hard coded,
+  // but here we're going to lookup its position. Note that we are looking up the frame of the static tool
+  // in the base frame of the Descartes model given in the initialize() function in main().
   tf::TransformListener listener;
-  ros::Duration(1.0).sleep();
-  Eigen::Affine3d gf;
+  tf::StampedTransform grinder_frame;
+  listener.waitForTransform("world", "grinder_frame", ros::Time(0), ros::Duration(5.0));
   listener.lookupTransform("world", "grinder_frame", ros::Time(0), grinder_frame);
+
+  // Descartes uses eigen, so let's convert the data type
+  Eigen::Affine3d gf;
   tf::transformTFToEigen(grinder_frame, gf);
 
-  Frame wobj_base(gf);
-  Frame tool_base = Frame::Identity();
-  TolerancedFrame wobj_pt = Frame::Identity();
+  // When you tell Descartes about a "cartesian" frame, you can specify 4 "supporting" frames, and all are
+  // identity unless otherwise stated:
+  // 1. 'wobj_base': A fixed frame from the base of the robot to the base of a part.
+  // 2. 'wobj_pt': The point at which the 'tool_pt' should be put, specified in the frame of 'wobj_base'.
+  //               This point can have tolerances associated with it.
+  // 3. 'tool_base': A fixed frame from the tool of the robot (e.g. tool0) to a reference point on the tool.
+  // 4. 'tool_pt': The point which is put on 'wobj_pt' specified in the frame of 'tool_base'. This point can
+  //               have tolerances associated with it.
+  //
+  // NOTE: I'm pretty sure the math is broken if you specify tolerances for BOTH 'wobj_pt' and 'tool_pt' at the
+  // same time. I recommend just using one toleranced frame.
 
-  for (auto& point : path)
+  Frame wobj_base(gf); // Here we say our wobj_base is the grinder pose
+  Frame tool_base = Frame::Identity(); // That our tool base is identity. This is because the URDF frame "puzzle" already
+                                       // puts us in the right frame. If we didn't have this, or it changed a lot, we
+                                       // could use this value to set the base frame for our CAD points
+  TolerancedFrame wobj_pt = Frame::Identity(); // Here we keep the base frame identical to the grinder pose.
+
+  // Now we translate our poses to Descartes points
+  for (const auto& point : path)
   {
-    auto p = point;
-    TolerancedFrame tool_pt(p);
-    tool_pt.orientation_tolerance.z_lower -= M_PI;
-    tool_pt.orientation_tolerance.z_upper += M_PI;
+    // Each 'point' represents a point on the edge of the puzzle part. The tool poses are exported in such a way that
+    // the Z of each point is parallel with the grinder, so turning around Z is okay.
+    TolerancedFrame tool_pt(point);
+    tool_pt.orientation_tolerance.z_lower = -M_PI; // Search -PI to PI (so 360 degrees)
+    tool_pt.orientation_tolerance.z_upper = M_PI;
 
-    boost::shared_ptr<CartTrajectoryPt> pt(new CartTrajectoryPt(wobj_base, wobj_pt, tool_base, tool_pt, 0, M_PI/180.0, descartes_core::TimingConstraint(0.25)));
+    boost::shared_ptr<CartTrajectoryPt> pt(
+          new CartTrajectoryPt(wobj_base, wobj_pt, tool_base, tool_pt, // Here we specify our frames
+                               0, // Don't search in cartesian space. We want the points to be exact.
+                               M_PI/90.0, // Do search our rotation in 2 degree increments.
+                               descartes_core::TimingConstraint(0.25))); // Make every point 0.25 seconds apart
     descartes_path.push_back(pt);
   }
   return descartes_path;
@@ -267,7 +257,7 @@ makeDescartesTrajectory(const EigenSTL::vector_Affine3d& path)
 std::vector<descartes_core::TrajectoryPtPtr> makePath()
 {
   EigenSTL::vector_Affine3d tool_poses = makePuzzleToolPoses();
-//  visualizePuzzlePath(tool_poses);
+  visualizePoses(tool_poses);
   return makeDescartesTrajectory(tool_poses);
 }
 
