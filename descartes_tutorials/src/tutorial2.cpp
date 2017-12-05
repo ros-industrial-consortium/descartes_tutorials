@@ -257,7 +257,6 @@ makeDescartesTrajectory(const EigenSTL::vector_Affine3d& path)
 std::vector<descartes_core::TrajectoryPtPtr> makePath()
 {
   EigenSTL::vector_Affine3d tool_poses = makePuzzleToolPoses();
-  visualizePoses(tool_poses);
   return makeDescartesTrajectory(tool_poses);
 }
 
