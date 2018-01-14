@@ -36,6 +36,9 @@ rosrun descartes_tutorials tutorial1
 ```
 
 ## Tutorial 2
+
+[![Descartes Tutorial 2](https://img.youtube.com/vi/9SsYagiFPAw/0.jpg)](https://www.youtube.com/watch?v=9SsYagiFPAw) 
+
 A more complex tutorial. The robot is holding a puzzle piece and moves the perimeter around a fixed grinder in the environment.
 ```
 roslaunch tutorial2_moveit_config planning_execution.launch
