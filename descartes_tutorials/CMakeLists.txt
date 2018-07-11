@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   tf
   tf_conversions
+  descartes_opw_model
 )
 
 catkin_package()
@@ -47,13 +48,22 @@ set_target_properties(${PROJECT_NAME}_tutorial2
   PROPERTIES OUTPUT_NAME tutorial2
   PREFIX "")
 
+# Tutorial 3 - Puzzle Demo with OPW Kinematics
+add_executable(${PROJECT_NAME}_tutorial3 src/tutorial3.cpp)
 
+target_link_libraries(${PROJECT_NAME}_tutorial3
+ ${catkin_LIBRARIES}
+)
+
+set_target_properties(${PROJECT_NAME}_tutorial3
+  PROPERTIES OUTPUT_NAME tutorial3
+  PREFIX "")
 
 #############
 ## Install ##
 #############
 
-install(TARGETS ${PROJECT_NAME}_tutorial1
+install(TARGETS ${PROJECT_NAME}_tutorial1 ${PROJECT_NAME}_tutorial3
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

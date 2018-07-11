@@ -13,6 +13,8 @@ Clone the following repos:
 ```
 git clone https://github.com/ros-industrial-consortium/descartes_tutorials.git
 git clone https://github.com/ros-industrial/abb.git
+git clone https://github.com/Jmeyer1292/opw_kinematics.git
+git clone https://github.com/Jmeyer1292/descartes_opw_model.git
 ```
 
 Install dependencies:
@@ -46,4 +48,15 @@ roslaunch tutorial2_moveit_config planning_execution.launch
 rosrun descartes_tutorials tutorial2
 ```
 
+## Tutorial 3 (Tutorial 2 w/ OPW Kinematics)
+This tutorial shares 95% of its code with tutorial2 and solves the same problem, just using the
+[opw_kinematics](https://github.com/Jmeyer1292/opw_kinematics) kinematics solver package.
 
+We re-use the workspace from tutorial 2:
+```
+roslaunch tutorial2_moveit_config planning_execution.launch
+```
+
+```
+rosrun descartes_tutorials tutorial3
+```
