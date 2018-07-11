@@ -33,7 +33,6 @@
   <run_depend>descartes_moveit</run_depend>
   <run_depend>descartes_planner</run_depend>
   <run_depend>descartes_trajectory</run_depend>
-  <run_depend>motoman_sia20d_moveit_config</run_depend>
   <run_depend>descartes_utilities</run_depend>
   <run_depend>trajectory_msgs</run_depend>
   <run_depend>descartes_opw_model</run_depend>
