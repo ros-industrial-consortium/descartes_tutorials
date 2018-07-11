@@ -46,7 +46,7 @@ int main(int argc, char** argv)
   // All of the existing planners (as of Nov 2017) have been designed with the idea that you have "closed form"
   // kinematics. This means that the default solvers in MoveIt (KDL) will NOT WORK WELL. I encourage you to produce
   // an ikfast model for your robot (see MoveIt tutorial) or use the OPW kinematics package if you have a spherical
-  // wrist industrial robot. See the readme for references.
+  // wrist industrial robot. See http://docs.ros.org/kinetic/api/moveit_tutorials/html/doc/ikfast/ikfast_tutorial.html 
 
   // This package assumes that the move group you are using is pointing to an IKFast kinematics plugin in its
   // kinematics.yaml file. By default, it assumes that the underlying kinematics are from 'base_link' to 'tool0'.
