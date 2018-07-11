@@ -1,7 +1,5 @@
 # Descartes Tutorials
 
-For a full description of the tutorials please see [the wiki](http://wiki.ros.org/descartes/Tutorials).
-
 ## Installation
 
 Install the following:
@@ -27,7 +25,7 @@ Then build.
 
 ## Tutorial 1
 Very basic tutorial. Moves a robot along a straight line by specifying where to
-put the tool.
+put the tool. Note that more extensive documentation can be found in tutorial1.cpp.
 ```
 roslaunch descartes_tutorials setup.launch
 ```
@@ -47,3 +45,5 @@ roslaunch tutorial2_moveit_config planning_execution.launch
 ```
 rosrun descartes_tutorials tutorial2
 ```
+
+
