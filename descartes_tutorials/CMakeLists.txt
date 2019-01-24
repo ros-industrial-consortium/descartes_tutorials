@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   tf
   tf_conversions
+  eigen_conversions
 )
 
 catkin_package()
