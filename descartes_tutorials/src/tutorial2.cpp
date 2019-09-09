@@ -140,9 +140,9 @@ int main(int argc, char** argv)
  * @brief Loads a specific file containing the perimeter of the puzzle part generated from CAD. The frames
  * are exported in the "puzzle" frame, so we can coordinate the motion of the robot with this part.
  */
-static EigenSTL::vector_Affine3d makePuzzleToolPoses()
+static EigenSTL::vector_Isometry3d makePuzzleToolPoses()
 {
-  EigenSTL::vector_Affine3d path; // results
+  EigenSTL::vector_Isometry3d path; // results
   std::ifstream indata; // input file
 
   // You could load your parts from anywhere, but we are transporting them with the git repo
@@ -182,7 +182,7 @@ static EigenSTL::vector_Affine3d makePuzzleToolPoses()
       Eigen::Vector3d temp_x = (-1 * pos).normalized();
       Eigen::Vector3d y_axis = (norm.cross(temp_x)).normalized();
       Eigen::Vector3d x_axis = (y_axis.cross(norm)).normalized();
-      Eigen::Affine3d pose;
+      Eigen::Isometry3d pose;
       pose.matrix().col(0).head<3>() = x_axis;
       pose.matrix().col(1).head<3>() = y_axis;
       pose.matrix().col(2).head<3>() = norm;
@@ -196,7 +196,7 @@ static EigenSTL::vector_Affine3d makePuzzleToolPoses()
 }
 
 std::vector<descartes_core::TrajectoryPtPtr>
-makeDescartesTrajectory(const EigenSTL::vector_Affine3d& path)
+makeDescartesTrajectory(const EigenSTL::vector_Isometry3d& path)
 {
   using namespace descartes_core;
   using namespace descartes_trajectory;
@@ -214,7 +214,7 @@ makeDescartesTrajectory(const EigenSTL::vector_Affine3d& path)
   listener.lookupTransform("world", "grinder_frame", ros::Time(0), grinder_frame);
 
   // Descartes uses eigen, so let's convert the data type
-  Eigen::Affine3d gf;
+  Eigen::Isometry3d gf;
   tf::transformTFToEigen(grinder_frame, gf);
 
   // When you tell Descartes about a "cartesian" frame, you can specify 4 "supporting" frames, and all are
@@ -256,7 +256,7 @@ makeDescartesTrajectory(const EigenSTL::vector_Affine3d& path)
 
 std::vector<descartes_core::TrajectoryPtPtr> makePath()
 {
-  EigenSTL::vector_Affine3d tool_poses = makePuzzleToolPoses();
+  EigenSTL::vector_Isometry3d tool_poses = makePuzzleToolPoses();
   return makeDescartesTrajectory(tool_poses);
 }
 
