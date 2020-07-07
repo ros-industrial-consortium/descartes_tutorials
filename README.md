@@ -1,4 +1,5 @@
 # Descartes Tutorials
+[![Build Status](https://travis-ci.com/ros-industrial-consortium/descartes_tutorials.svg?branch=master)](https://travis-ci.com/ros-industrial-consortium/descartes_tutorials)
 
 ## Installation
 
